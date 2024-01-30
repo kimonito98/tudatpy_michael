@@ -649,6 +649,24 @@ void expose_observation_setup(py::module &m) {
           py::arg("bias_list"),
           get_docstring("combined_bias").c_str() );
 
+    py::class_<tom::ObservationModelCreator<>,
+            std::shared_ptr<tom::ObservationModelCreator<>>>(
+            m, "ObservationModelCreator",
+            get_docstring("ObservationModelCreator").c_str() );
+
+    py::class_<tom::ObservationModelCreator<1, double, double>,
+            std::shared_ptr<tom::ObservationModelCreator<1, double, double>>>(
+            m, "ObservationModelCreator",
+            get_docstring("ObservationModelCreator").c_str() )
+            .def("createObservationModel",
+                 &tom::ObservationModelCreator<1, double, double>::createObservationModel,
+                 py::arg("observation_settings"),
+                 py::arg("bodies"),
+                 py::arg("top_level_observable_type") = tom::undefined_observation_model,
+                 get_docstring("ObservationModelCreator.createObservationModel").c_str());
+
+
+
 
     // ###########    Observation Simulation Settings     #############
 
