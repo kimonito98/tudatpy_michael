@@ -663,7 +663,7 @@ void expose_observation_setup(py::module &m) {
                  py::arg("observation_settings"),
                  py::arg("bodies"),
                  py::arg("top_level_observable_type") = tom::undefined_observation_model,
-                 get_docstring("ObservationModelCreator.createObservationModel").c_str());
+                 get_docstring("ObservationModelCreator.creqateObservationModel").c_str());
 
 
 
