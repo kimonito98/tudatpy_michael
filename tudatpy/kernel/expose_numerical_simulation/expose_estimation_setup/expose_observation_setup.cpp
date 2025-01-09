@@ -687,6 +687,78 @@ void expose_observation_setup(py::module &m) {
           &tom::twoWayTimeScaleRangeBias,
           get_docstring("two_way_time_scale_range_bias").c_str() );
 
+    py::class_<tom::ObservationModel<1, double, double>,
+        std::shared_ptr<tom::ObservationModel<1, double, double>>>
+        (m, "ObservationModel")
+    .def("compute_observations",
+         &tom::ObservationModel<1, double, double>::computeObservations,
+         py::arg("time"),
+         py::arg("link_end_associated_with_time"),
+         py::arg("ancilliary_settings") = nullptr )
+    .def("compute_ideal_observations_with_link_end_data",
+         &tom::ObservationModel<1, double, double>::computeIdealObservationsWithLinkEndData,
+         py::arg("time"),
+         py::arg("link_ends_associated_with_time"),
+         py::arg("link_ends_times"),
+         py::arg("link_ends_states"),
+         py::arg("ancilliary_settings") = nullptr);
+
+    py::class_<tom::OneWayRangeObservationModel<double, double>,
+        tom::ObservationModel<1, double, double>,
+        std::shared_ptr<tom::OneWayRangeObservationModel<double, double>>>
+        (m, "OneWayRangeObservationModel")
+    .def(py::init<const tom::LinkEnds&,
+                 const std::shared_ptr<tom::LightTimeCalculator<double, double>>,
+                 const std::shared_ptr<tom::ObservationBias<1>>>(),
+         py::arg("link_ends"),
+         py::arg("light_time_calculator"),
+         py::arg("observation_bias_calculator") = nullptr)
+    .def("compute_ideal_observations_with_link_end_data",
+         &tom::OneWayRangeObservationModel<double, double>::computeIdealObservationsWithLinkEndData,
+         py::arg("time"),
+         py::arg("link_end_associated_with_time"),
+         py::arg("link_end_times"),
+         py::arg("link_end_states"),
+         py::arg("ancilliary_settings") = nullptr);
+
+    py::class_<tom::NWayRangeObservationModel<double, double>,
+        tom::ObservationModel<1, double, double>,
+        std::shared_ptr<tom::NWayRangeObservationModel<double, double>>>
+        (m, "NWayRangeObservationModel")
+        .def(py::init<const tom::LinkEnds&,
+                const std::vector<std::shared_ptr<tom::LightTimeCalculator<double, double>>>,
+                const std::shared_ptr<tom::ObservationBias<1>>,
+                const std::shared_ptr<tom::LightTimeConvergenceCriteria>>(),
+             py::arg("link_ends"),
+             py::arg("light_time_calculators"),
+             py::arg("observation_bias_calculator") = nullptr,
+             py::arg("light_time_convergence_criteria") = py::none())
+        .def(py::init<const tom::LinkEnds&,
+                     const std::shared_ptr<tom::MultiLegLightTimeCalculator<double, double>>,
+                     const std::shared_ptr<tom::ObservationBias<1>>>(),
+             py::arg("link_ends"),
+             py::arg("multi_leg_light_time_calculator"),
+             py::arg("observation_bias_calculator") = nullptr)
+        .def("compute_ideal_observations_with_link_end_data",
+             &tom::NWayRangeObservationModel<double, double>::computeIdealObservationsWithLinkEndData,
+             py::arg("time"),
+             py::arg("link_end_associated_with_time"),
+             py::arg("link_end_times"),
+             py::arg("link_end_states"),
+             py::arg("ancilliary_settings") = nullptr);
+
+    py::class_<tom::ObservationModelCreator<1, double, double>,
+            std::shared_ptr<tom::ObservationModelCreator<1, double, double>>>(
+            m, "ObservationModelCreator",
+            get_docstring("ObservationModelCreator").c_str() )
+            .def_static("createObservationModel",
+                 &tom::ObservationModelCreator<1, double, double>::createObservationModel,
+                 py::arg("observation_settings"),
+                 py::arg("bodies"),
+                 py::arg("top_level_observable_type") = tom::undefined_observation_model,
+                 get_docstring("ObservationModelCreator.createObservationModel").c_str());
+
+
 
     // ###########    Observation Simulation Settings     #############
 

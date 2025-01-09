@@ -64,7 +64,9 @@ from tudatpy.kernel.numerical_simulation.estimation_setup.parameter import \
      spherical_harmonics_s_coefficients, \
      spherical_harmonics_s_coefficients_block, \
      time_drift_observation_bias, \
-     yarkovsky_parameter
+     yarkovsky_parameter, \
+     specular_reflectivity_type, \
+     diffuse_reflectivity_type
 # ----------------------------------------
 #                 OBJECTS                 
 # ----------------------------------------

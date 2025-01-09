@@ -67,6 +67,13 @@ void expose_estimated_parameter_setup(py::module &m) {
             .value("global_polynomial_clock_corrections_type", tep::EstimatebleParametersEnum::global_polynomial_clock_corrections)
             .value("arc_wise_polynomial_clock_corrections_type", tep::EstimatebleParametersEnum::arc_wise_polynomial_clock_corrections)
             .value("inverse_tidal_quality_factor_type", tep::EstimatebleParametersEnum::inverse_tidal_quality_factor)
+            .value("specular_reflectivity_type", tep::EstimatebleParametersEnum::specular_reflectivity)
+            .value("diffuse_reflectivity_type", tep::EstimatebleParametersEnum::diffuse_reflectivity)
+            .value("radiation_pressure_target_direction_scaling_type", tep::EstimatebleParametersEnum::source_direction_radiation_pressure_scaling_factor)
+            .value("radiation_pressure_target_perpendicular_direction_scaling_type", tep::EstimatebleParametersEnum::source_perpendicular_direction_radiation_pressure_scaling_factor)
+            .value("arcwise_radiation_pressure_target_direction_scaling_type", tep::EstimatebleParametersEnum::arcwise_source_direction_radiation_pressure_scaling_factor)
+            .value("arcwise_radiation_pressure_target_perpendicular_direction_scaling_type", tep::EstimatebleParametersEnum::arcwise_source_perpendicular_direction_radiation_pressure_scaling_factor)
+
             .export_values();
 
     py::enum_<tba::EmpiricalAccelerationComponents >(m, "EmpiricalAccelerationComponents", get_docstring("EmpiricalAccelerationComponents").c_str() )
@@ -158,6 +165,32 @@ void expose_estimated_parameter_setup(py::module &m) {
           py::arg("target_body"),
           py::arg("source_body"),
           get_docstring("radiation_pressure_target_perpendicular_direction_scaling").c_str() );
+
+    m.def("arcwise_radiation_pressure_target_direction_scaling",
+          &tep::arcWiseRadiationPressureTargetDirectionScaling,
+          py::arg("target_body"),
+          py::arg("source_body"),
+          py::arg("arc_start_times"),
+          get_docstring("radiation_pressure_target_direction_scaling").c_str() );
+
+    m.def("arcwise_radiation_pressure_target_perpendicular_direction_scaling",
+          &tep::arcWiseRadiationPressureTargetPerpendicularDirectionScaling,
+          py::arg("target_body"),
+          py::arg("source_body"),
+          py::arg("arc_start_times"),
+          get_docstring("arcwise_radiation_pressure_target_perpendicular_direction_scaling").c_str() );
+
+    m.def("specular_reflectivity",
+      &tep::specularReflectivity,
+      py::arg("body"),
+      py::arg("panel_id"),
+      get_docstring("specular_reflectivity").c_str() );
+
+    m.def("diffuse_reflectivity",
+      &tep::diffuseReflectivity,
+      py::arg("body"),
+      py::arg("panel_id"),
+      get_docstring("diffuse_reflectivity").c_str() );
 
     m.def("constant_empirical_acceleration_terms",
           &tep::constantEmpiricalAccelerationMagnitudes,
