@@ -476,9 +476,9 @@ void expose_estimated_parameter_setup( py::module& m )
            py::arg( "exerting_body" ),
            py::arg( "arc_start_times" ),
            R"doc(
- Function for creating parameter settings for an arc-wise radiation pressure acceleration scaling factor perpendicular to target direction.
+ Function for creating parameter settings for an arc-wise radiation pressure acceleration scaling factor in target direction.
 
- Function for creating parameter settings for scaling the radiation pressure acceleration component perpenedicular to the direction from the body
+ Function for creating parameter settings for scaling the radiation pressure acceleration component in  the direction from the body
  undergoing the acceleration to the source model. The present function creates settings for a parameter defining :math:`c_{\perp}`,
  see :func:`~radiation_pressure_target_direction_scaling`
 
