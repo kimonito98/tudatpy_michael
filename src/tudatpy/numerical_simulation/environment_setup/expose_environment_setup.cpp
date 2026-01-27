@@ -31,6 +31,7 @@
 #include "shape/expose_shape.h"
 #include "shape_deformation/expose_shape_deformation.h"
 #include "vehicle_systems/expose_vehicle_systems.h"
+#include <tudat/simulation/environment_setup/createRelativisticTimeConverter.h>
 
 namespace py = pybind11;
 namespace tss = tudat::simulation_setup;
@@ -1075,6 +1076,34 @@ void expose_environment_setup( py::module &m )
            py::arg( "sideslip_angle" ),
            py::arg( "bank_angle" ),
            py::arg( "silence_warnings" ) = false );
+
+    // Relativistic time converter helpers
+    py::class_< tudat::simulation_setup::DirectRelativisticTimeConverterSettings< double, double >,
+                std::shared_ptr< tudat::simulation_setup::DirectRelativisticTimeConverterSettings< double, double > > >(
+            m, "DirectRelativisticTimeConverterSettings" );
+
+    m.def(
+        "direct_relativistic_time_converter_settings",
+        []( const std::shared_ptr< tudat::propagators::RelativisticTimeStatePropagatorSettings< double, double > >& barycentric_to_bodycentric_settings,
+            const std::shared_ptr< tudat::numerical_integrators::IntegratorSettings< double > >& integrator_settings,
+            const std::vector< std::shared_ptr< tudat::propagators::RelativisticTimeStatePropagatorSettings< double, double > > >& bodycentric_to_topocentric_settings )
+        {
+            return std::make_shared< tudat::simulation_setup::DirectRelativisticTimeConverterSettings< double, double > >(
+                        barycentric_to_bodycentric_settings, integrator_settings, bodycentric_to_topocentric_settings );
+        },
+        py::arg( "barycentric_to_bodycentric_settings" ),
+        py::arg( "integrator_settings" ),
+        py::arg( "bodycentric_to_topocentric_settings" ) = std::vector< std::shared_ptr< tudat::propagators::RelativisticTimeStatePropagatorSettings< double, double > > >( ) );
+
+    m.def(
+        "set_relativistic_time_converters",
+        []( const tss::SystemOfBodies& bodies,
+            const std::map< std::string, std::shared_ptr< tudat::simulation_setup::DirectRelativisticTimeConverterSettings< double, double > > >& settings )
+        {
+            tudat::simulation_setup::setRelativisticTimeConverters< double, double >( bodies, settings );
+        },
+        py::arg( "bodies" ),
+        py::arg( "converter_settings" ) );
 }
 
 }  // namespace environment_setup

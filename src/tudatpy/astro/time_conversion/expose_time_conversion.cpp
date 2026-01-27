@@ -15,6 +15,7 @@
 #include <pybind11/pybind11.h>
 #include <tudat/astro/basic_astro.h>
 #include <tudat/astro/basic_astro/timeConversions.h>
+#include <tudat/astro/ephemerides/timeEphemeris.h>
 #include <tudat/astro/earth_orientation/terrestrialTimeScaleConverter.h>
 #include <tudat/math/basic/mathematicalConstants.h>
 #include <tudat/basics/deprecationWarnings.h>
@@ -115,15 +116,21 @@ void expose_time_conversion( py::module& m )
 
  )doc" )
             .value( "tai_scale", tba::tai_scale, R"doc(
- )doc" )
+)doc" )
             .value( "tt_scale", tba::tt_scale, R"doc(
- )doc" )
+)doc" )
             .value( "tdb_scale", tba::tdb_scale, R"doc(
- )doc" )
+)doc" )
             .value( "utc_scale", tba::utc_scale, R"doc(
- )doc" )
+)doc" )
             .value( "ut1_scale", tba::ut1_scale, R"doc(
- )doc" )
+)doc" )
+            .value( "body_centered_coordinate_time_scale", tba::body_centered_coordinate_time_scale, R"doc(
+)doc" )
+            .value( "barycentric_coordinate_time_scale", tba::barycentric_coordinate_time_scale, R"doc(
+)doc" )
+            .value( "local_proper_time_scale", tba::local_proper_time_scale, R"doc(
+)doc" )
             .export_values( );
 
     py::class_< teo::TerrestrialTimeScaleConverter, std::shared_ptr< teo::TerrestrialTimeScaleConverter > >( m,
@@ -152,6 +159,14 @@ void expose_time_conversion( py::module& m )
                   py::arg( "output_scale" ),
                   py::arg( "input_value" ),
                   py::arg( "earth_fixed_position" ) = Eigen::Vector3d::Zero( ) );
+
+    py::class_< tudat::TimeEphemeris, std::shared_ptr< tudat::TimeEphemeris > >( m, "TimeEphemeris" )
+            .def( "get_time_difference",
+                  &tudat::TimeEphemeris::getTimeDifference,
+                  py::arg( "input_scale" ),
+                  py::arg( "output_scale" ),
+                  py::arg( "input_time" ),
+                  py::arg( "point_identifier" ) = "" );
 
     py::class_< tba::DateTime >( m, "DateTime", R"doc(
 

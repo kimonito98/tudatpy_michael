@@ -2514,67 +2514,8 @@ The type of the acceleration that is to be saved.
 
      )doc" );
 
-    m.def( "vehicle_panel_surface_normals_inertial_frame",
-           &tp::vehiclePanelInertialSurfaceNormals,
-           py::arg( "body_name" ),
-           py::arg( "part_name" ) = "",
-           R"doc(No documentation found.)doc" );
 
-    m.def( "vehicle_panel_surface_normals_body_fixed_frame",
-           &tp::vehiclePanelInertialSurfaceNormals,
-           py::arg( "body_name" ),
-           py::arg( "part_name" ) = "",
-           R"doc(No documentation found.)doc" );
 
-    m.def( "per_target_panel_radiation_pressure_force",
-           &tp::vehiclePanelInertialSurfaceNormals,
-           py::arg( "target_name" ),
-           py::arg( "source_name" ),
-           R"doc(No documentation found.)doc" );
-
-    m.def( "radiation_pressure_source_panel_irradiance",
-           &tp::paneledRadiationSourcePerPanelIrradiance,
-           py::arg( "target_name" ),
-           py::arg( "source_name" ),
-           R"doc(No documentation found.)doc" );
-
-    m.def( "radiation_pressure_source_panel_geometry",
-           &tp::paneledRadiationSourceGeometry,
-           py::arg( "target_name" ),
-           py::arg( "source_name" ),
-           R"doc(No documentation found.)doc" );
-
-    m.def( "illuminated_panel_fraction",
-           &tp::illuminatedPanelFractionDependentVariable,
-           py::arg( "target_name" ),
-           py::arg( "source_name" ),
-           py::arg( "panel_type" ) = "",
-           R"doc(No documentation found.)doc" );
-
-    m.def( "cross_section_change",
-           &tp::crossSectionChangeDependentVariable,
-           py::arg( "target_name" ),
-           py::arg( "source_name" ),
-           py::arg( "acceleration_type" ) = "radiation_pressure",
-           R"doc(No documentation found.)doc" );
-
-    m.def( "full_body_paneled_geometry",
-           &tp::fullBodyPaneledGeometryDependentVariable,
-           py::arg( "target_name" ),
-           R"doc(No documentation found.)doc" );
-
-    m.def( "aerodynamic_coefficients",
-           &tp::aerodynamicCoefficientsDependentVariable,
-           py::arg( "target_name" ),
-           py::arg( "central_body_name" ),
-           R"doc(No documentation found.)doc" );
-
-    m.def( "actual_cross_section",
-           &tp::actualCrossSectionDependentVariable,
-           py::arg( "target_name" ),
-           py::arg( "central_body_name" ),
-           py::arg( "acceleration_type" ) = "radiation_pressure",
-           R"doc(No documentation found.)doc" );
 }
 
 }  // namespace dependent_variable

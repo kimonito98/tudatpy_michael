@@ -322,20 +322,6 @@ void expose_estimated_parameter_setup( py::module& m )
 
      )doc" );
     
-    m.def( "drag_component_scaling",
-           &tep::dragComponentScaling,
-           py::arg( "body" ),
-           R"doc(No documentation.)doc" );
-    
-    m.def( "side_component_scaling",
-           &tep::sideComponentScaling,
-           py::arg( "body" ),
-           R"doc(No documentation.)doc" );
-    
-    m.def( "lift_component_scaling",
-           &tep::liftComponentScaling,
-           py::arg( "body" ),
-           R"doc(No documentation.)doc" );
 
     m.def( "radiation_pressure_coefficient",
            &tep::radiationPressureCoefficient,
@@ -506,70 +492,6 @@ void expose_estimated_parameter_setup( py::module& m )
  :class:`~tudatpy.numerical_simulation.estimation_setup.parameter.EstimatableParameterSettings`
      Instance of :class:`~tudatpy.numerical_simulation.estimation_setup.parameter.EstimatableParameterSettings` derived :class:`~tudatpy.numerical_simulation.estimation_setup.parameter.EmpiricalAccelerationEstimatableParameterSettings` class
      for the specified body's empirical acceleration terms.
-
-     )doc" );
-
-    m.def( "arcwise_radiation_pressure_target_direction_scaling",
-           &tep::arcwiseSourceDirectionRadiationPressureScaling,
-           py::arg( "associated_body" ),
-           py::arg( "exerting_body" ),
-           py::arg( "arc_start_times" ),
-           R"doc(
- Function for creating parameter settings for an arc-wise radiation pressure acceleration scaling factor in target direction.
-
- Function for creating parameter settings for scaling the radiation pressure acceleration component in  the direction from the body
- undergoing the acceleration to the source model. The present function creates settings for a parameter defining :math:`c_{\perp}`,
- see :func:`~radiation_pressure_target_direction_scaling`
-
- Using this parameter requires:
-
- * The body specified by the ``target_body`` parameter to undergo :func:`~tudatpy.numerical_simulation.propagation_setup.acceleration.radiation_pressure` acceleration exerted by ``source_body``
-
- Parameters
- ----------
- associated_body : str
-     Name of the body on which radiation pressure is exerted
- exerting_body : str
-     Name of the body exerting the radiation pressure
-arc_start_times : List[ float ]
-     List of times at which the arcs over which the radiation pressure coefficient is to be estimated will start.
-
- Returns
- -------
- :class:`~tudatpy.numerical_simulation.estimation_setup.parameter.EstimatableParameterSettings`
-     Instance of :class:`~tudatpy.numerical_simulation.estimation_setup.parameter.EstimatableParameterSettings` class dedining parallel radiation pressure scaling
-
-     )doc" );
-
-    m.def( "arcwise_radiation_pressure_target_perpendicular_direction_scaling",
-           &tep::arcwisePerpendicularRadiationPressureScaling,
-           py::arg( "associated_body" ),
-           py::arg( "exerting_body" ),
-           py::arg( "arc_start_times" ),
-           R"doc(
- Function for creating parameter settings for an arc-wise radiation pressure acceleration scaling factor perpendicular to target direction.
-
- Function for creating parameter settings for scaling the radiation pressure acceleration component perpenedicular to the direction from the body
- undergoing the acceleration to the source model. The present function creates settings for a parameter defining :math:`c_{\perp}`,
- see :func:`~radiation_pressure_target_direction_scaling`
-
- Using this parameter requires:
-
- * The body specified by the ``target_body`` parameter to undergo :func:`~tudatpy.numerical_simulation.propagation_setup.acceleration.radiation_pressure` acceleration exerted by ``source_body``
-
- Parameters
- ----------
- associated_body : str
-     Name of the body on which radiation pressure is exerted
- exerting_body : str
-     Name of the body exerting the radiation pressure
-arc_start_times : List[ float ]
-     List of times at which the arcs over which the radiation pressure coefficient is to be estimated will start.
-
- Returns
- -------
- :class:`~tudatpy.numerical_simulation.estimation_setup.parameter.EstimatableParameterSettings`
-     Instance of :class:`~tudatpy.numerical_simulation.estimation_setup.parameter.EstimatableParameterSettings` class dedining parallel radiation pressure scaling
 
      )doc" );
 

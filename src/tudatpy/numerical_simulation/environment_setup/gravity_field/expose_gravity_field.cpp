@@ -20,10 +20,12 @@
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <tudat/astro/reference_frames/referenceFrameTransformations.h>
 
 namespace py = pybind11;
 namespace tss = tudat::simulation_setup;
 namespace tpc = tudat::physical_constants;
+namespace trf = tudat::reference_frames;
 
 namespace tudat
 {
@@ -103,6 +105,42 @@ namespace gravity_field
 
 void expose_gravity_field_setup( py::module& m )
 {
+    py::class_< trf::RotationWrapper, std::shared_ptr< trf::RotationWrapper > >( m, "RotationWrapper" );
+
+    py::class_< trf::QuaternionRotationWrapper,
+                std::shared_ptr< trf::QuaternionRotationWrapper >,
+                trf::RotationWrapper >( m, "QuaternionRotationWrapper" )
+            .def( py::init< std::function< Eigen::Quaterniond( ) > >( ),
+                  py::arg( "quaternion_function" ) )
+            .def( py::init( []( const std::function< Eigen::Vector4d( ) >& quaternion_entries_function )
+                            {
+                                return std::make_shared< trf::QuaternionRotationWrapper >(
+                                            [quaternion_entries_function]( )
+                                            {
+                                                const Eigen::Vector4d q = quaternion_entries_function( );
+                                                return Eigen::Quaterniond( q( 0 ), q( 1 ), q( 2 ), q( 3 ) );
+                                            } );
+                            } ),
+                  py::arg( "quaternion_entries_function" ) )
+            .def_static( "from_quaternion_entries_function",
+                         []( const std::function< Eigen::Vector4d( ) >& quaternion_entries_function )
+                         {
+                             return std::make_shared< trf::QuaternionRotationWrapper >(
+                                         [quaternion_entries_function]( )
+                                         {
+                                             const Eigen::Vector4d q = quaternion_entries_function( );
+                                             return Eigen::Quaterniond( q( 0 ), q( 1 ), q( 2 ), q( 3 ) );
+                                         } );
+                         },
+                         py::arg( "quaternion_entries_function" ) )
+            .def_static( "from_constant",
+                         []( const Eigen::Quaterniond& q )
+                         {
+                             return std::make_shared< trf::QuaternionRotationWrapper >(
+                                 [q]( ){ return q; } );
+                         },
+                         py::arg( "quaternion" ) );
+
     /////////////////////////////////////////////////////////////////////////////
     // createGravityField.h
     /////////////////////////////////////////////////////////////////////////////

@@ -18,7 +18,9 @@
 #include <pybind11/stl.h>
 #include <tudat/astro/aerodynamics.h>
 #include <tudat/astro/ephemerides.h>
+#include <tudat/astro/ephemerides/timeEphemeris.h>
 #include <tudat/astro/gravitation.h>
+#include <tudat/astro/reference_frames/referenceFrameTransformations.h>
 #include <tudat/basics/deprecationWarnings.h>
 
 #include "scalarTypes.h"
@@ -1935,7 +1937,17 @@ inside a `Body` instance and used in observation corrections or environmental qu
          use in gravitational acceleration and torque models. This class is derived from :class:`~GravityFieldModel`.  This object is typically created using the :func:`~tudatpy.numerical_simulation.environment_setup.gravity_field.spherical_harmonic`
          settings function. If any time variations of the gravity field are provided, an object of the derived class :class:`~TimeVariableSphericalHarmonicsGravityField` is created.
 
-     )doc" )
+        )doc" )
+            .def( "get_gravitational_potential",
+                  &tg::GravityFieldModel::getGravitationalPotential,
+                  py::arg( "body_fixed_position" ),
+                  R"doc(
+        Evaluate the gravitational potential [m^2/s^2] at a body-fixed position.
+
+        The input position must be expressed in the body's fixed frame (e.g. ITRS for Earth).
+        For inertial positions, rotate them to the body-fixed frame first using the body's
+        rotation model (see ``body.inertial_to_body_fixed_frame``).
+        )doc" )
             .def_property_readonly( "reference_radius",
                                     &tg::SphericalHarmonicsGravityField::getReferenceRadius,
                                     R"doc(
@@ -1983,6 +1995,18 @@ inside a `Body` instance and used in observation corrections or environmental qu
          Matrix with sine spherical harmonic coefficients :math:`\bar{S}_{lm}` (geodesy normalized). Entry :math:`(i,j)` denotes coefficient at degree :math:`i` and order :math:`j`.
 
          :type: numpy.ndarray[numpy.float64[l, m]]
+      )doc" )
+            .def( "set_rotation_wrapper",
+                  &tg::SphericalHarmonicsGravityField::setRotationWrapper,
+                  py::arg( "rotation_wrapper" ),
+                  R"doc(
+
+         Attach a rotation wrapper used to evaluate the body-fixed-to-inertial transformation inside the spherical harmonic model.
+
+         Parameters
+         ----------
+         rotation_wrapper : RotationWrapper
+             Wrapper providing the current rotation quaternion.
       )doc" );
 
     py::class_< tg::TimeDependentSphericalHarmonicsGravityField,
@@ -2565,6 +2589,29 @@ inside a `Body` instance and used in observation corrections or environmental qu
 
 
          :type: Ephemeris
+      )doc" )
+            .def( "set_rotation_from_ephemeris",
+                  &tss::Body::setCurrentRotationToLocalFrameFromEphemeris,
+                  py::arg( "time" ),
+                  R"doc(
+
+         Force-update the body's current rotation from inertial to body-fixed frame using its rotational ephemeris at the given time.
+
+         Parameters
+         ----------
+         time : float
+             Epoch (seconds since J2000 TDB) at which to evaluate the rotational ephemeris.
+      )doc" )
+            .def( "get_time_scale_converter",
+                  &tss::Body::getTimeScaleConverter,
+                  R"doc(
+
+         Retrieve the time scale converter (relativistic time ephemeris) associated with this body, if any.
+
+         Returns
+         -------
+         TimeEphemeris
+            Converter object to query time differences between time scales (e.g., TCB, TCG, proper time).
       )doc" )
             .def_property( "atmosphere_model",
                            &tss::Body::getAtmosphereModel,

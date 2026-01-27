@@ -660,8 +660,23 @@ Enumeration of available integrated state types.
          Processing settings for the single-arc component of the multi-arc propagation.
 
 
-         :type: MultiArcPropagatorProcessingSettings
-      )doc" );
+        :type: MultiArcPropagatorProcessingSettings
+     )doc" );
+
+    // Minimal bindings to hold relativistic time propagator settings
+    py::class_< tp::RelativisticTimeStatePropagatorSettings< double, double >,
+                std::shared_ptr< tp::RelativisticTimeStatePropagatorSettings< double, double > > >(
+            m, "RelativisticTimePropagatorSettings" );
+
+    py::class_< tp::SecondOrderBodyCenteredRelativisticTimeConverterSettings< double, double >,
+                std::shared_ptr< tp::SecondOrderBodyCenteredRelativisticTimeConverterSettings< double, double > >,
+                tp::RelativisticTimeStatePropagatorSettings< double, double > >(
+            m, "SecondOrderBodyCenteredRelativisticTimeConverterSettings" );
+
+    py::class_< tp::BodycenteredToTopocentricTimePropagatorSettings< double, double >,
+                std::shared_ptr< tp::BodycenteredToTopocentricTimePropagatorSettings< double, double > >,
+                tp::RelativisticTimeStatePropagatorSettings< double, double > >(
+            m, "BodycenteredToTopocentricTimePropagatorSettings" );
 
     // CLASSES
     py::class_< tp::PropagatorSettings< STATE_SCALAR_TYPE >, std::shared_ptr< tp::PropagatorSettings< STATE_SCALAR_TYPE > > >(
@@ -1741,6 +1756,59 @@ HybridArcPropagatorSettings
 
 
      )doc" );
+
+    // Relativistic time propagator settings helpers (minimal exposure)
+    m.def(
+        "second_order_body_centered_relativistic_time_settings",
+        []( const std::string& body,
+            const std::vector< std::string >& perturbing_bodies,
+            const double initial_time,
+            const std::shared_ptr< tni::IntegratorSettings< double > >& integrator_settings,
+            const std::shared_ptr< tp::PropagationTerminationSettings >& termination_settings,
+            const std::map< std::string, std::pair< int, int > >& spherical_harmonic_expansions )
+        {
+            return std::make_shared< tp::SecondOrderBodyCenteredRelativisticTimeConverterSettings< double, double > >(
+                        body, perturbing_bodies, initial_time, integrator_settings, termination_settings, spherical_harmonic_expansions );
+        },
+        py::arg( "body" ),
+        py::arg( "perturbing_bodies" ),
+        py::arg( "initial_time" ),
+        py::arg( "integrator_settings" ),
+        py::arg( "termination_settings" ),
+        py::arg( "spherical_harmonic_expansions" ) = std::map< std::string, std::pair< int, int > >( ) );
+
+    m.def(
+        "bodycentered_to_topocentric_time_settings",
+        []( const std::pair< std::string, std::string >& reference_point_id,
+            const bool use_acceleration_term,
+            const int maximum_spherical_harmonic_degree,
+            const bool use_time_dependent_body_fixed_position,
+            const std::vector< std::string >& topocentric_external_bodies,
+            const Eigen::VectorXd& initial_state,
+            const double initial_time,
+            const std::shared_ptr< tni::IntegratorSettings< double > >& integrator_settings,
+            const std::shared_ptr< tp::PropagationTerminationSettings >& termination_settings )
+        {
+            return std::make_shared< tp::BodycenteredToTopocentricTimePropagatorSettings< double, double > >(
+                        reference_point_id,
+                        use_acceleration_term,
+                        maximum_spherical_harmonic_degree,
+                        use_time_dependent_body_fixed_position,
+                        topocentric_external_bodies,
+                        initial_state,
+                        initial_time,
+                        integrator_settings,
+                        termination_settings );
+        },
+        py::arg( "reference_point_id" ),
+        py::arg( "use_acceleration_term" ),
+        py::arg( "maximum_spherical_harmonic_degree" ),
+        py::arg( "use_time_dependent_body_fixed_position" ),
+        py::arg( "topocentric_external_bodies" ),
+        py::arg( "initial_state" ),
+        py::arg( "initial_time" ),
+        py::arg( "integrator_settings" ),
+        py::arg( "termination_settings" ) );
 
     m.def( "add_dependent_variable_settings",
            &tp::addDepedentVariableSettings< double >,

@@ -468,87 +468,9 @@ The body-fixed frame of the body itself.
             "tings",
             R"doc(No documentation found.)doc" );
 
-    py::enum_< ta::GasSurfaceInteractionModelType >(m, "gas_surface_interaction_model" )
-        .value( "newton", ta::newton )
-        .value( "storch", ta::storch )
-        .value( "sentman", ta::sentman )
-        .value( "cook", ta::cook );
 
-    m.def( "panelled",
-            py::overload_cast< const ta::GasSurfaceInteractionModelType,
-                               const double,
-                               const int,
-                               const bool >(
-                   &tss::panelledAerodynamicCoefficientSettings ),
-           py::arg( "gas_surface_interaction_model" ),
-           py::arg( "reference_area" ),
-           py::arg( "maximum_number_of_pixels" ) = 0,
-           py::arg( "only_drag_component" ) = false,
-            R"doc(No documentation found.)doc" );
+
     
-    m.def( "constant_variable_cross_section",
-            py::overload_cast< const Eigen::Vector3d &,
-                               const int,
-                               const ta::AerodynamicCoefficientFrames >(
-                   &tss::panelledConstantAerodynamicCoefficientSettings ),
-           py::arg( "constant_force_coefficient" ),
-           py::arg( "maximum_number_of_pixels" ) = 0,
-           py::arg( "force_coefficients_frame" ) = ta::negative_aerodynamic_frame_coefficients,
-            R"doc(No documentation found.)doc" );
-            
-    m.def( "constant",
-           py::overload_cast< const double,
-                              const Eigen::Vector3d &,
-                              const ta::AerodynamicCoefficientFrames >(
-                   &tss::constantAerodynamicCoefficientSettings ),
-           py::arg( "reference_area" ),
-           py::arg( "constant_force_coefficient" ),
-           py::arg( "force_coefficients_frame" ) = ta::negative_aerodynamic_frame_coefficients,
-           R"doc(
-
-Function for creating aerodynamic interface model settings entirely from constant coefficients.
-
-Function for settings object, defining aerodynamic interface model entirely from constant aerodynamic force coefficients,
-i.e. coefficients are not a function of any independent variables.
-
-Note that this function does not define any moment coefficients.
-
-Parameters
-----------
-reference_area : float
-    Reference area with which aerodynamic forces and moments are non-dimensionalized.
-constant_force_coefficient : numpy.ndarray
-    Constant force coefficients.
-force_coefficients_frame : AerodynamicCoefficientFrames, default = negative_aerodynamic_frame_coefficients
-    Variable defining the frame in which the force coefficients are defined. By default, this is the negative aerodynamic
-     frame, so that the coefficients are for drag, side force and lift (:math:`C_{D}, C_{S}, C_{L}`)
-
-Returns
--------
-ConstantAerodynamicCoefficientSettings
-    Instance of the :class:`~tudatpy.numerical_simulation.environment_setup.aerodynamic_coefficients.AerodynamicCoefficientSettings` derived :class:`~tudatpy.numerical_simulation.environment_setup.aerodynamic_coefficients.ConstantAerodynamicCoefficientSettings` class
-
-Examples
---------
-In this example, we create :class:`~tudatpy.numerical_simulation.environment_setup.aerodynamic_coefficients.AerodynamicCoefficientSettings` for the artificial body "Vehicle", using only constant aerodynamic coefficients:
-
-.. code-block:: python
-
-    # Define the reference area and constant aerodynamic coefficients
-    reference_area = 20.0
-    drag_coefficient = 1.5
-    lift_coefficient = 0.3
-    # Create the aerodynamic interface settings
-    aero_coefficient_settings = environment_setup.aerodynamic_coefficients.constant(
-        reference_area,
-        constant_force_coefficient=[drag_coefficient, 0, lift_coefficient],
-        force_coefficients_frame=environment.negative_aerodynamic_frame_coefficients,
-    )
-    # Assign aerodynamic coefficient settings to the vehicle settings
-    body_settings.get( "Vehicle" ).aerodynamic_coefficient_settings = aero_coefficient_settings
-
-
-     )doc" );
 
     m.def( "constant_force_and_moment",
            &tss::constantAerodynamicForceAndMomentCoefficientSettings,

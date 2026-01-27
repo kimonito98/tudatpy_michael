@@ -251,46 +251,7 @@ Panel surface area
         :type: str
         )doc" );
 
-    m.def( "body_panel_settings",
-           py::overload_cast<
-                std::shared_ptr< tss::BodyPanelGeometrySettings >,
-                std::shared_ptr< tss::BodyPanelReflectionLawSettings >,
-                std::string,
-                std::shared_ptr< tss::MaterialProperties > >( &tss::bodyPanelSettings ),
-           py::arg( "panel_geometry" ),
-           py::arg( "panel_reflection_law" ),
-           py::arg( "panel_type_id" ) = "",
-           py::arg( "material_properties" ) = nullptr,
-           R"doc(
-
- Function for creating settings for a full panel
-
- Function for creating settings for a full panel (presently only geometry and reflection properties). The :class:`~tudatpy.numerical_simulation.environment_setup.radiation_pressure.BodyPanelReflectionLawSettings` can be created using the :func:`~tudatpy.numerical_simulation.environment_setup.radiation_pressure.specular_diffuse_body_panel_reflection` or :func:`~tudatpy.numerical_simulation.environment_setup.radiation_pressure.lambertian_body_panel_reflection` functions.
- The panel
- can also be endowed with an identifier to specify the type of the panel. This has no direct consequences for the model,
- but may be useful in estimation, to for instance estimate the reflection properties of all panels specified with identified "MLI"
- as a single parameter
-
-
- Parameters
- ----------
- panel_geometry : BodyPanelGeometrySettings
-     Geometric properties of the panel (size and orientation, at least)
- panel_reflection_law : BodyPanelReflectionLawSettings
-     Reflection law settings of the panel
- panel_type_id : str, default = ""
-     Optional identifier for panel type
- Returns
- -------
- BodyPanelSettings
-     Object defining settings for a panel
-
-
-
-
-
-
-     )doc" );
+    
 
     py::class_< tss::FullPanelledBodySettings, std::shared_ptr< tss::FullPanelledBodySettings > >(
             m,
@@ -420,36 +381,6 @@ Panel surface area
 
      )doc" );
 
-    m.def( "body_panel_settings_list_from_dae",
-        &tss::bodyPanelSettingsListFromDae,
-        py::arg( "file_path" ),
-        py::arg( "frame_origin" ),
-        py::arg( "material_properties" ),
-        py::arg( "reradiation_settings" ),
-        py::arg( "frame_orientation" ) = "",
-        R"doc(
-Function for creating list of panel body settings
-        
-Function for creating list of panel body settings from a .dae (COLLADA) file containing the 3D geometry and the
-material for the paneled surface.
-Parameters
-----------
-file_path : str
-    Path to .dae file with geometry data.
-frame_origin : np.array
-    Frame origin of the .dae part to be loaded.
-material_properties : dict[str, MaterialProperties]
-    Dictionary of material properties, as they appear in the .dae file provided.
-reradiation_settings : dict[str, bool]
-    Dictionary of re-radiation settings for materials, as they appear in the .dae file provided.
-frame_orientation : str, default = "
-    Identifier of the frame to which the panel is fixed (if body-fixed frame, this can be left empty).
-    
-Returns
--------
-list[BodyPanelSettings]
-    List of settings for body panels
-    )doc" );
 
     m.def( "merge_body_panel_setting_lists",
        &tss::mergeBodyPanelSettingsLists,
@@ -466,23 +397,7 @@ list[BodyPanelSettings]
     List of settings for body panels assembled from different parts, creating a coherent list of body panel settings.
     )doc" );
 
-    py::class_< tss::MaterialProperties, std::shared_ptr< tss::MaterialProperties > >(m, "MaterialProperties")
-        .def_readwrite("specular_reflectivity", &tss::MaterialProperties::specularReflectivity_)
-        .def_readwrite("diffuse_reflectivity", &tss::MaterialProperties::diffuseReflectivity_)
-        .def_readwrite("energy_accomodation_coefficient", &tss::MaterialProperties::energyAccomodationCoefficient_)
-        .def_readwrite("normal_accomodation_coefficient", &tss::MaterialProperties::normalAccomodationCoefficient_)
-        .def_readwrite("tangential_accomodation_coefficient", &tss::MaterialProperties::tangentialAccomodationCoefficient_)
-        .def_readwrite("normal_velocity_at_wall_ratio", &tss::MaterialProperties::normalVelocityAtWallRatio_);
-
-    m.def( "material_properties",
-       &tss::materialProperties,
-       py::arg( "specular_reflectivity" ) = -1,
-       py::arg( "diffuse_reflectivity" ) = -1,
-       py::arg( "energy_accomodation_coefficient" ) = -1,
-       py::arg( "normal_accomodation_coefficient" ) = -1,
-       py::arg( "tangential_accomodation_coefficient" ) = -1,
-       py::arg( "normal_velocity_at_wall_ratio" ) = -1,
-       R"doc(No Documentation)doc" );
+   
     
 }
 
