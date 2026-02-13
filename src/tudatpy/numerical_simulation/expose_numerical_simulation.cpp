@@ -99,6 +99,9 @@ void expose_numerical_simulation( py::module &m )
             .def( double( ) >= py::self )
             .def( py::self >= double( ) );
 
+    // Allow implicit conversion from float/double to Time in Python.
+    py::implicitly_convertible< double, tudat::Time >( );
+
     m.def( "get_integrated_type_and_body_list",
            &tp::getIntegratedTypeAndBodyList< STATE_SCALAR_TYPE, TIME_TYPE >,
            py::arg( "propagator_settings" ) );

@@ -663,20 +663,37 @@ Enumeration of available integrated state types.
         :type: MultiArcPropagatorProcessingSettings
      )doc" );
 
-    // Minimal bindings to hold relativistic time propagator settings
-    py::class_< tp::RelativisticTimeStatePropagatorSettings< double, double >,
-                std::shared_ptr< tp::RelativisticTimeStatePropagatorSettings< double, double > > >(
-            m, "RelativisticTimePropagatorSettings" );
+    // Relativistic time propagator settings
+    py::class_< tp::RelativisticTimeStatePropagatorSettings< STATE_SCALAR_TYPE, TIME_TYPE >,
+                std::shared_ptr< tp::RelativisticTimeStatePropagatorSettings< STATE_SCALAR_TYPE, TIME_TYPE > > >(
+            m, "RelativisticTimePropagatorSettings", R"doc(
 
-    py::class_< tp::SecondOrderBodyCenteredRelativisticTimeConverterSettings< double, double >,
-                std::shared_ptr< tp::SecondOrderBodyCenteredRelativisticTimeConverterSettings< double, double > >,
-                tp::RelativisticTimeStatePropagatorSettings< double, double > >(
-            m, "SecondOrderBodyCenteredRelativisticTimeConverterSettings" );
+        Base class for relativistic time-state propagator settings.
 
-    py::class_< tp::BodycenteredToTopocentricTimePropagatorSettings< double, double >,
-                std::shared_ptr< tp::BodycenteredToTopocentricTimePropagatorSettings< double, double > >,
-                tp::RelativisticTimeStatePropagatorSettings< double, double > >(
-            m, "BodycenteredToTopocentricTimePropagatorSettings" );
+     )doc" );
+
+    py::class_< tp::SecondOrderBodyCenteredRelativisticTimeConverterSettings< STATE_SCALAR_TYPE, TIME_TYPE >,
+                std::shared_ptr< tp::SecondOrderBodyCenteredRelativisticTimeConverterSettings< STATE_SCALAR_TYPE, TIME_TYPE > >,
+                tp::RelativisticTimeStatePropagatorSettings< STATE_SCALAR_TYPE, TIME_TYPE > >(
+            m, "SecondOrderBodyCenteredRelativisticTimeConverterSettings", R"doc(
+
+        Settings for second-order body-centered relativistic time propagation.
+
+        Used to construct barycentric↔body-centered time conversions (e.g., TCB↔TCG)
+        with post-Newtonian corrections.
+
+     )doc" );
+
+    py::class_< tp::BodycenteredToTopocentricTimePropagatorSettings< STATE_SCALAR_TYPE, TIME_TYPE >,
+                std::shared_ptr< tp::BodycenteredToTopocentricTimePropagatorSettings< STATE_SCALAR_TYPE, TIME_TYPE > >,
+                tp::RelativisticTimeStatePropagatorSettings< STATE_SCALAR_TYPE, TIME_TYPE > >(
+            m, "BodycenteredToTopocentricTimePropagatorSettings", R"doc(
+
+        Settings for body-centered↔topocentric relativistic time propagation.
+
+        Used for local proper time conversions at a ground station or reference point.
+
+     )doc" );
 
     // CLASSES
     py::class_< tp::PropagatorSettings< STATE_SCALAR_TYPE >, std::shared_ptr< tp::PropagatorSettings< STATE_SCALAR_TYPE > > >(
@@ -1762,12 +1779,12 @@ HybridArcPropagatorSettings
         "second_order_body_centered_relativistic_time_settings",
         []( const std::string& body,
             const std::vector< std::string >& perturbing_bodies,
-            const double initial_time,
-            const std::shared_ptr< tni::IntegratorSettings< double > >& integrator_settings,
+            const TIME_TYPE& initial_time,
+            const std::shared_ptr< tni::IntegratorSettings< TIME_TYPE > >& integrator_settings,
             const std::shared_ptr< tp::PropagationTerminationSettings >& termination_settings,
             const std::map< std::string, std::pair< int, int > >& spherical_harmonic_expansions )
         {
-            return std::make_shared< tp::SecondOrderBodyCenteredRelativisticTimeConverterSettings< double, double > >(
+            return std::make_shared< tp::SecondOrderBodyCenteredRelativisticTimeConverterSettings< STATE_SCALAR_TYPE, TIME_TYPE > >(
                         body, perturbing_bodies, initial_time, integrator_settings, termination_settings, spherical_harmonic_expansions );
         },
         py::arg( "body" ),
@@ -1775,7 +1792,32 @@ HybridArcPropagatorSettings
         py::arg( "initial_time" ),
         py::arg( "integrator_settings" ),
         py::arg( "termination_settings" ),
-        py::arg( "spherical_harmonic_expansions" ) = std::map< std::string, std::pair< int, int > >( ) );
+        py::arg( "spherical_harmonic_expansions" ) = std::map< std::string, std::pair< int, int > >( ),
+        R"doc(
+
+ Create settings for second-order body-centered relativistic time propagation.
+
+ Parameters
+ ----------
+ body : str
+     Name of the central body for the body-centered time scale.
+ perturbing_bodies : list[str]
+     List of perturbing bodies used in the time conversion.
+ initial_time : float
+     Initial time (seconds since J2000).
+ integrator_settings : IntegratorSettings
+     Numerical integrator settings for the time-state propagation.
+ termination_settings : PropagationTerminationSettings
+     Termination settings for the time-state propagation.
+ spherical_harmonic_expansions : dict[str, tuple[int, int]], optional
+     Optional map of body name to (degree, order) for spherical harmonic gravity.
+
+ Returns
+ -------
+ SecondOrderBodyCenteredRelativisticTimeConverterSettings
+     Settings object for body-centered relativistic time propagation.
+
+        )doc" );
 
     m.def(
         "bodycentered_to_topocentric_time_settings",
@@ -1784,12 +1826,12 @@ HybridArcPropagatorSettings
             const int maximum_spherical_harmonic_degree,
             const bool use_time_dependent_body_fixed_position,
             const std::vector< std::string >& topocentric_external_bodies,
-            const Eigen::VectorXd& initial_state,
-            const double initial_time,
-            const std::shared_ptr< tni::IntegratorSettings< double > >& integrator_settings,
+            const Eigen::Matrix< STATE_SCALAR_TYPE, Eigen::Dynamic, 1 >& initial_state,
+            const TIME_TYPE& initial_time,
+            const std::shared_ptr< tni::IntegratorSettings< TIME_TYPE > >& integrator_settings,
             const std::shared_ptr< tp::PropagationTerminationSettings >& termination_settings )
         {
-            return std::make_shared< tp::BodycenteredToTopocentricTimePropagatorSettings< double, double > >(
+            return std::make_shared< tp::BodycenteredToTopocentricTimePropagatorSettings< STATE_SCALAR_TYPE, TIME_TYPE > >(
                         reference_point_id,
                         use_acceleration_term,
                         maximum_spherical_harmonic_degree,
@@ -1808,7 +1850,38 @@ HybridArcPropagatorSettings
         py::arg( "initial_state" ),
         py::arg( "initial_time" ),
         py::arg( "integrator_settings" ),
-        py::arg( "termination_settings" ) );
+        py::arg( "termination_settings" ),
+        R"doc(
+
+ Create settings for body-centered↔topocentric relativistic time propagation.
+
+ Parameters
+ ----------
+ reference_point_id : tuple[str, str]
+     (Body name, reference point name), e.g. ("Earth", "Graz").
+ use_acceleration_term : bool
+     Whether to include acceleration terms in the topocentric conversion.
+ maximum_spherical_harmonic_degree : int
+     Maximum spherical harmonic degree for gravity terms in the conversion.
+ use_time_dependent_body_fixed_position : bool
+     Whether to use time-dependent body-fixed positions for the reference point.
+ topocentric_external_bodies : list[str]
+     External bodies to include in the topocentric conversion.
+ initial_state : numpy.ndarray
+     Initial relativistic time state.
+ initial_time : float
+     Initial time (seconds since J2000).
+ integrator_settings : IntegratorSettings
+     Numerical integrator settings for the time-state propagation.
+ termination_settings : PropagationTerminationSettings
+     Termination settings for the time-state propagation.
+
+ Returns
+ -------
+ BodycenteredToTopocentricTimePropagatorSettings
+     Settings object for body-centered↔topocentric time propagation.
+
+        )doc" );
 
     m.def( "add_dependent_variable_settings",
            &tp::addDepedentVariableSettings< double >,

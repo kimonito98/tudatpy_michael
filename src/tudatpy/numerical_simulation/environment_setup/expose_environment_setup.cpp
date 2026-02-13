@@ -1078,32 +1078,72 @@ void expose_environment_setup( py::module &m )
            py::arg( "silence_warnings" ) = false );
 
     // Relativistic time converter helpers
-    py::class_< tudat::simulation_setup::DirectRelativisticTimeConverterSettings< double, double >,
-                std::shared_ptr< tudat::simulation_setup::DirectRelativisticTimeConverterSettings< double, double > > >(
-            m, "DirectRelativisticTimeConverterSettings" );
+    py::class_< tudat::simulation_setup::DirectRelativisticTimeConverterSettings< STATE_SCALAR_TYPE, TIME_TYPE >,
+                std::shared_ptr< tudat::simulation_setup::DirectRelativisticTimeConverterSettings< STATE_SCALAR_TYPE, TIME_TYPE > > >(
+            m, "DirectRelativisticTimeConverterSettings", R"doc(
+
+        Settings for constructing a direct relativistic time converter for a body.
+
+        This settings object groups the time-scale propagation settings used to
+        build a :class:`~tudatpy.numerical_simulation.environment.TimeEphemeris`
+        for a given body (e.g., TCB↔TCG and body-centered↔topocentric conversions).
+
+     )doc" );
 
     m.def(
         "direct_relativistic_time_converter_settings",
-        []( const std::shared_ptr< tudat::propagators::RelativisticTimeStatePropagatorSettings< double, double > >& barycentric_to_bodycentric_settings,
-            const std::shared_ptr< tudat::numerical_integrators::IntegratorSettings< double > >& integrator_settings,
-            const std::vector< std::shared_ptr< tudat::propagators::RelativisticTimeStatePropagatorSettings< double, double > > >& bodycentric_to_topocentric_settings )
+        []( const std::shared_ptr< tudat::propagators::RelativisticTimeStatePropagatorSettings< STATE_SCALAR_TYPE, TIME_TYPE > >& barycentric_to_bodycentric_settings,
+            const std::shared_ptr< tudat::numerical_integrators::IntegratorSettings< TIME_TYPE > >& integrator_settings,
+            const std::vector< std::shared_ptr< tudat::propagators::RelativisticTimeStatePropagatorSettings< STATE_SCALAR_TYPE, TIME_TYPE > > >& bodycentric_to_topocentric_settings )
         {
-            return std::make_shared< tudat::simulation_setup::DirectRelativisticTimeConverterSettings< double, double > >(
+            return std::make_shared< tudat::simulation_setup::DirectRelativisticTimeConverterSettings< STATE_SCALAR_TYPE, TIME_TYPE > >(
                         barycentric_to_bodycentric_settings, integrator_settings, bodycentric_to_topocentric_settings );
         },
         py::arg( "barycentric_to_bodycentric_settings" ),
         py::arg( "integrator_settings" ),
-        py::arg( "bodycentric_to_topocentric_settings" ) = std::vector< std::shared_ptr< tudat::propagators::RelativisticTimeStatePropagatorSettings< double, double > > >( ) );
+        py::arg( "bodycentric_to_topocentric_settings" ) = std::vector< std::shared_ptr< tudat::propagators::RelativisticTimeStatePropagatorSettings< STATE_SCALAR_TYPE, TIME_TYPE > > >( ),
+        R"doc(
+
+ Create settings for a direct relativistic time converter.
+
+ Parameters
+ ----------
+ barycentric_to_bodycentric_settings : RelativisticTimePropagatorSettings
+     Settings for the barycentric↔body-centered conversion (e.g. TCB↔TCG).
+ integrator_settings : IntegratorSettings
+     Numerical integrator settings used for time-scale propagation.
+ bodycentric_to_topocentric_settings : list[RelativisticTimePropagatorSettings], optional
+     Optional list of body-centered↔topocentric conversion settings (local proper time).
+
+ Returns
+ -------
+ DirectRelativisticTimeConverterSettings
+     Settings object used by :func:`~set_relativistic_time_converters`.
+
+        )doc" );
 
     m.def(
         "set_relativistic_time_converters",
         []( const tss::SystemOfBodies& bodies,
-            const std::map< std::string, std::shared_ptr< tudat::simulation_setup::DirectRelativisticTimeConverterSettings< double, double > > >& settings )
+            const std::map< std::string, std::shared_ptr< tudat::simulation_setup::DirectRelativisticTimeConverterSettings< STATE_SCALAR_TYPE, TIME_TYPE > > >& settings )
         {
-            tudat::simulation_setup::setRelativisticTimeConverters< double, double >( bodies, settings );
+            tudat::simulation_setup::setRelativisticTimeConverters< STATE_SCALAR_TYPE, TIME_TYPE >( bodies, settings );
         },
         py::arg( "bodies" ),
-        py::arg( "converter_settings" ) );
+        py::arg( "converter_settings" ),
+        R"doc(
+
+ Attach relativistic time converters to bodies.
+
+ Parameters
+ ----------
+ bodies : SystemOfBodies
+     The system of bodies to which time converters are attached.
+ converter_settings : dict[str, DirectRelativisticTimeConverterSettings]
+     Mapping from body name to converter settings. Each entry creates a
+     time-scale converter accessible via :func:`~tudatpy.numerical_simulation.environment.Body.get_time_scale_converter`.
+
+        )doc" );
 }
 
 }  // namespace environment_setup
