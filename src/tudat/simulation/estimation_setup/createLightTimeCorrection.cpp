@@ -738,7 +738,9 @@ std::shared_ptr< LightTimeCorrection > createLightTimeCorrections( const std::sh
             if( nequick2Settings->getUseIonexRescaling( ) && ionexModel != nullptr )
             {
                 rescaledModel = std::make_shared< environment::IonexConstrainedNeQuick2Model >(
-                        neQuick2Model, ionexModel );
+                        neQuick2Model, ionexModel,
+                        nequick2Settings->getTopsideAwareRescaling( ),
+                        nequick2Settings->getRescalingFloor( ) );
             }
 
             // Create Earth state function

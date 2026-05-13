@@ -113,6 +113,23 @@ public:
     //! Latitude and longitude in degrees, time in seconds since J2000.
     double getVerticalTotalElectronContent( double latitudeDeg, double longitudeDeg, double time ) override;
 
+    //! Get vertical TEC integrated over a finite altitude band [TECU].
+    /*!
+     * Used by the topside-aware IONEX rescaling: by integrating between two heights one can
+     * estimate the column NeQuick attributes to the part of the atmosphere a given link does
+     * not traverse (e.g., above the ISS).
+     *
+     * \param latitudeDeg Geographic latitude [deg N].
+     * \param longitudeDeg Geographic longitude [deg E].
+     * \param time Time [s since J2000].
+     * \param lowAltitudeKm Lower altitude bound of the integral [km].
+     * \param highAltitudeKm Upper altitude bound of the integral [km].
+     * \return Partial vertical TEC in TECU (zero if highAltitudeKm <= lowAltitudeKm).
+     */
+    double getVerticalTotalElectronContentInBand(
+        double latitudeDeg, double longitudeDeg, double time,
+        double lowAltitudeKm, double highAltitudeKm );
+
     //! Get reference ionosphere height [m]. Returns a nominal hmF2 of 350 km.
     double getReferenceIonosphereHeight( ) const override
     {
@@ -180,9 +197,37 @@ private:
 
 //! IONEX-constrained NeQuick-2 wrapper.
 /*!
- * Rescales the NeQuick-2 NmF2 so that the vertical TEC column integral matches the IONEX VTEC
- * at the ionospheric pierce point. Then integrates the rescaled electron density along the
+ * Rescales the NeQuick-2 NmF2 so that a vertical TEC anchor matches the IONEX VTEC at the
+ * ionospheric pierce point, then integrates the rescaled electron density along the
  * transmitter-receiver ray path to compute slant TEC.
+ *
+ * Two rescaling modes are supported via the `topsideAwareRescaling` constructor flag:
+ *
+ *  - **Full-column** (legacy, `topsideAwareRescaling = false`):
+ *
+ *        k = VTEC_IONEX / VTEC_NeQuick(0 → 20000 km)
+ *
+ *    Calibrates against the entire vertical column. Appropriate when the receiver sits above
+ *    the ionosphere (ground-to-GNSS): in that case the link traverses essentially the full
+ *    column and the rescaling is consistent.
+ *
+ *  - **Topside-aware** (default, `topsideAwareRescaling = true`):
+ *
+ *        cutoff       = max(altitude_tx, altitude_rx)
+ *        VTEC_anchor  = max(VTEC_IONEX - VTEC_NeQuick(cutoff → 20000 km),
+ *                            rescalingFloor · VTEC_IONEX)
+ *        k            = VTEC_anchor / VTEC_NeQuick(0 → cutoff)
+ *
+ *    Calibrates against only the portion of the column the ray actually traverses. Important
+ *    for receivers embedded in the ionosphere (e.g. ISS at ~420 km) where the upper-topside
+ *    and plasmaspheric contribution to the IONEX VTEC is not seen by the link. For ground-to-
+ *    GNSS links the cutoff is at ~20000 km and the topside-aware result coincides with the
+ *    legacy full-column rescaling to within numerical noise.
+ *
+ * The `rescalingFloor` parameter (default 0.1) clamps the anchor from below: if NeQuick over-
+ * estimates the upper-topside column to the point where `VTEC_IONEX - VTEC_NQ_above_cutoff`
+ * would be negative or implausibly small, the anchor is replaced by `rescalingFloor · VTEC_IONEX`
+ * so the rescaling remains numerically stable.
  */
 class IonexConstrainedNeQuick2Model
 {
@@ -192,10 +237,17 @@ public:
     /*!
      * \param neQuick2Model The underlying NeQuick-2 model.
      * \param ionexModel The IONEX-based tabulated ionosphere model providing VTEC.
+     * \param topsideAwareRescaling If true (default), subtract NeQuick's estimate of the
+     *        column above the ray's maximum altitude from VTEC_IONEX before forming the
+     *        rescaling factor. If false, use the legacy full-column rescaling.
+     * \param rescalingFloor Minimum admissible anchor as a fraction of VTEC_IONEX. Only
+     *        used when topsideAwareRescaling is true (default 0.1).
      */
     IonexConstrainedNeQuick2Model(
         std::shared_ptr< NeQuick2Model > neQuick2Model,
-        std::shared_ptr< IonosphereModel > ionexModel );
+        std::shared_ptr< IonosphereModel > ionexModel,
+        bool topsideAwareRescaling = true,
+        double rescalingFloor = 0.1 );
 
     //! Compute rescaled slant TEC along a ray [el/m^2].
     /*!
@@ -219,10 +271,18 @@ public:
     //! Get the underlying IONEX model.
     std::shared_ptr< IonosphereModel > getIonexModel( ) const { return ionexModel_; }
 
+    //! True if topside-aware rescaling is enabled.
+    bool usesTopsideAwareRescaling( ) const { return topsideAwareRescaling_; }
+
+    //! Fraction of VTEC_IONEX used as a lower clamp on the anchor.
+    double getRescalingFloor( ) const { return rescalingFloor_; }
+
 private:
 
     std::shared_ptr< NeQuick2Model > neQuick2Model_;
     std::shared_ptr< IonosphereModel > ionexModel_;
+    bool topsideAwareRescaling_;
+    double rescalingFloor_;
 };
 
 }  // namespace environment

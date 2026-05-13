@@ -571,6 +571,18 @@ double NeQuick2Model::computeElectronDensityRescaled( double heightKm, double la
 
 double NeQuick2Model::getVerticalTotalElectronContent( double latitudeDeg, double longitudeDeg, double time )
 {
+    return getVerticalTotalElectronContentInBand( latitudeDeg, longitudeDeg, time, 0.0, 20000.0 );
+}
+
+double NeQuick2Model::getVerticalTotalElectronContentInBand(
+    double latitudeDeg, double longitudeDeg, double time,
+    double lowAltitudeKm, double highAltitudeKm )
+{
+    if( highAltitudeKm <= lowAltitudeKm )
+    {
+        return 0.0;
+    }
+
     int month;
     double ut;
     timeToMonthAndUT( time, month, ut );
@@ -579,17 +591,16 @@ double NeQuick2Model::getVerticalTotalElectronContent( double latitudeDeg, doubl
 
     NeQuick2LayerParameters params = computeLayerParameters( latitudeDeg, longitudeDeg, month, flx, ut );
 
-    // Integrate electron density vertically from 0 to 20000 km
     std::function< double( double ) > electronDensityProfile = [ &params ]( double h ) {
         return computeElectronDensityFromParams( h, params );
     };
 
     numerical_quadrature::GaussianQuadrature< double, double > quadrature(
-        electronDensityProfile, 0.0, 20000.0, 50 );
+        electronDensityProfile, lowAltitudeKm, highAltitudeKm, 50 );
 
-    // Result in el/m^2, multiply by 1e3 to convert km integration to meters, then to TECU (1e16 el/m^2 = 1 TECU)
-    double vtecElPerM2 = quadrature.getQuadrature( ) * 1.0e3;  // km -> m conversion
-    return vtecElPerM2 / 1.0e16;  // Convert to TECU
+    // Integral is el/m^3 dh[km], so multiply by 1e3 to get el/m^2, then convert to TECU (1 TECU = 1e16 el/m^2)
+    double vtecElPerM2 = quadrature.getQuadrature( ) * 1.0e3;
+    return vtecElPerM2 / 1.0e16;
 }
 
 // ============================================================================
@@ -598,9 +609,13 @@ double NeQuick2Model::getVerticalTotalElectronContent( double latitudeDeg, doubl
 
 IonexConstrainedNeQuick2Model::IonexConstrainedNeQuick2Model(
     std::shared_ptr< NeQuick2Model > neQuick2Model,
-    std::shared_ptr< IonosphereModel > ionexModel )
+    std::shared_ptr< IonosphereModel > ionexModel,
+    bool topsideAwareRescaling,
+    double rescalingFloor )
     : neQuick2Model_( neQuick2Model ),
-      ionexModel_( ionexModel )
+      ionexModel_( ionexModel ),
+      topsideAwareRescaling_( topsideAwareRescaling ),
+      rescalingFloor_( rescalingFloor )
 {
 }
 
@@ -628,15 +643,50 @@ double IonexConstrainedNeQuick2Model::computeRescaledSlantTec(
     // Get IONEX VTEC at IPP [TECU]
     double vtecIonex = ionexModel_->getVerticalTotalElectronContent( ippLatDeg, ippLonDeg, time );
 
-    // Get NeQuick VTEC at IPP [TECU]
-    double vtecNeQuick = neQuick2Model_->getVerticalTotalElectronContent( ippLatDeg, ippLonDeg, time );
+    // Top of the NeQuick integration domain [km]; matches getVerticalTotalElectronContent default.
+    const double topOfModelKm = 20000.0;
 
-    // Compute rescaling factor
+    // Compute rescaling factor with either topside-aware (default) or full-column (legacy) logic.
     double k = 1.0;
-    if( vtecNeQuick > 0.01 )
+    if( topsideAwareRescaling_ )
     {
-        k = vtecIonex / vtecNeQuick;
-        if( k < 0.0 ) k = 0.0;  // safety clamp
+        // Cutoff = highest altitude the ray reaches. Above this the link does not sample the
+        // ionosphere, so we should not let the corresponding NeQuick column influence k.
+        double txAltKm = ( txPositionEarthFixed.norm( ) - earthRadius ) / 1.0e3;
+        double rxAltKm = ( rxPositionEarthFixed.norm( ) - earthRadius ) / 1.0e3;
+        double cutoffAltitudeKm = std::max( txAltKm, rxAltKm );
+
+        // For ground-to-GNSS the cutoff sits at the top of the NeQuick domain, in which case the
+        // "above cutoff" integral is zero and the result coincides with the full-column rescaling.
+        cutoffAltitudeKm = std::min( cutoffAltitudeKm, topOfModelKm );
+        cutoffAltitudeKm = std::max( cutoffAltitudeKm, 0.0 );
+
+        double vtecNqAbove = neQuick2Model_->getVerticalTotalElectronContentInBand(
+            ippLatDeg, ippLonDeg, time, cutoffAltitudeKm, topOfModelKm );
+        double vtecNqBelow = neQuick2Model_->getVerticalTotalElectronContentInBand(
+            ippLatDeg, ippLonDeg, time, 0.0, cutoffAltitudeKm );
+
+        // Anchor = portion of the column the ray actually traverses, taken from IONEX.
+        double vtecAnchor = vtecIonex - vtecNqAbove;
+        double minAnchor = rescalingFloor_ * std::max( vtecIonex, 0.0 );
+        if( vtecAnchor < minAnchor ) vtecAnchor = minAnchor;
+
+        if( vtecNqBelow > 0.01 )
+        {
+            k = vtecAnchor / vtecNqBelow;
+            if( k < 0.0 ) k = 0.0;
+        }
+    }
+    else
+    {
+        // Legacy full-column rescaling.
+        double vtecNeQuick = neQuick2Model_->getVerticalTotalElectronContent(
+            ippLatDeg, ippLonDeg, time );
+        if( vtecNeQuick > 0.01 )
+        {
+            k = vtecIonex / vtecNeQuick;
+            if( k < 0.0 ) k = 0.0;
+        }
     }
 
     // Integrate rescaled N_e along the ray using Gauss-Legendre quadrature

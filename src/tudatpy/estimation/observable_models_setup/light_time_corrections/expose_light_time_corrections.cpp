@@ -447,10 +447,13 @@ first_order_delay_coefficient : float, default = 40.3
                int quadratureOrder,
                const std::string& ccirDataPath,
                const std::string& solarActivityDataPath,
-               double ionexRmsBiasTecu ) {
+               double ionexRmsBiasTecu,
+               bool topsideAwareRescaling,
+               double rescalingFloor ) {
                return tom::nequick2IonosphericCorrectionSettings(
                    "Earth", useIonexRescaling, firstOrderDelayCoefficient,
-                   quadratureOrder, ccirDataPath, solarActivityDataPath, ionexRmsBiasTecu );
+                   quadratureOrder, ccirDataPath, solarActivityDataPath, ionexRmsBiasTecu,
+                   topsideAwareRescaling, rescalingFloor );
            },
            py::arg( "use_ionex_rescaling" ) = true,
            py::arg( "first_order_delay_coefficient" ) = 40.3,
@@ -458,6 +461,8 @@ first_order_delay_coefficient : float, default = 40.3
            py::arg( "ccir_data_path" ) = "",
            py::arg( "solar_activity_data_path" ) = "",
            py::arg( "ionex_rms_bias_tecu" ) = 0.0,
+           py::arg( "topside_aware_rescaling" ) = true,
+           py::arg( "rescaling_floor" ) = 0.1,
            R"doc(
 
 Function for creating settings for NeQuick-2 path-integrated ionospheric light-time corrections.
@@ -508,6 +513,21 @@ ionex_rms_bias_tecu : float, default = 0.0
     not captured by the formal RMS. Set to 0 to use only the IONEX RMS.
     The resulting correction uncertainty is stored internally and can be retrieved
     as a dependent variable after simulation.
+topside_aware_rescaling : bool, default = True
+    If True (recommended), the rescaling factor :math:`k = V_{\text{anchor}} / V_{\text{NQ,below}}`
+    is computed using only the portion of the column the ray actually traverses, where
+    :math:`V_{\text{anchor}} = \mathrm{VTEC}_{\text{IONEX}} - \mathrm{VTEC}_{\text{NQ}}(h_{\text{cutoff}} \to 20000\,\text{km})`
+    and :math:`h_{\text{cutoff}}` is the maximum altitude reached by the link. This avoids
+    calibrating against electrons above the ray (upper-topside and plasmasphere) that the
+    link never samples, which is critical for receivers embedded in the ionosphere (e.g.,
+    ISS at ~420 km). For ground-to-GNSS links the cutoff lies at the top of the NeQuick
+    domain and the result coincides with the legacy full-column rescaling.
+    Set to False to recover the legacy :math:`k = \mathrm{VTEC}_{\text{IONEX}} / \mathrm{VTEC}_{\text{NQ,full}}`.
+rescaling_floor : float, default = 0.1
+    Minimum admissible anchor as a fraction of :math:`\mathrm{VTEC}_{\text{IONEX}}`. Used only
+    when ``topside_aware_rescaling`` is True. Prevents the anchor from going negative or
+    becoming implausibly small if NeQuick overestimates the upper-topside column. A value of
+    0.1 means the anchor is clamped from below at 10 % of the IONEX VTEC.
 
 Returns
 -------

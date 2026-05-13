@@ -425,7 +425,9 @@ public:
         int quadratureOrder = 50,
         const std::string& ccirDataPath = "",
         const std::string& solarActivityDataPath = "",
-        double ionexRmsBiasTecu = 0.0 ):
+        double ionexRmsBiasTecu = 0.0,
+        bool topsideAwareRescaling = true,
+        double rescalingFloor = 0.1 ):
         LightTimeCorrectionSettings( nequick2_ionospheric ),
         bodyWithIonosphere_( bodyWithIonosphere ),
         useIonexRescaling_( useIonexRescaling ),
@@ -433,7 +435,9 @@ public:
         quadratureOrder_( quadratureOrder ),
         ccirDataPath_( ccirDataPath ),
         solarActivityDataPath_( solarActivityDataPath ),
-        ionexRmsBiasTecu_( ionexRmsBiasTecu )
+        ionexRmsBiasTecu_( ionexRmsBiasTecu ),
+        topsideAwareRescaling_( topsideAwareRescaling ),
+        rescalingFloor_( rescalingFloor )
     {}
 
     std::string getBodyWithIonosphere( ) const { return bodyWithIonosphere_; }
@@ -443,6 +447,8 @@ public:
     std::string getCcirDataPath( ) const { return ccirDataPath_; }
     std::string getSolarActivityDataPath( ) const { return solarActivityDataPath_; }
     double getIonexRmsBiasTecu( ) const { return ionexRmsBiasTecu_; }
+    bool getTopsideAwareRescaling( ) const { return topsideAwareRescaling_; }
+    double getRescalingFloor( ) const { return rescalingFloor_; }
 
 private:
     std::string bodyWithIonosphere_;
@@ -452,6 +458,8 @@ private:
     std::string ccirDataPath_;
     std::string solarActivityDataPath_;
     double ionexRmsBiasTecu_;
+    bool topsideAwareRescaling_;
+    double rescalingFloor_;
 };
 
 // Class defining settings for tabulated ionospheric corrections
@@ -581,11 +589,14 @@ inline std::shared_ptr< LightTimeCorrectionSettings > nequick2IonosphericCorrect
         int quadratureOrder = 50,
         const std::string& ccirDataPath = "",
         const std::string& solarActivityDataPath = "",
-        double ionexRmsBiasTecu = 0.0 )
+        double ionexRmsBiasTecu = 0.0,
+        bool topsideAwareRescaling = true,
+        double rescalingFloor = 0.1 )
 {
     return std::make_shared< NeQuick2IonosphericCorrectionSettings >(
         bodyWithIonosphere, useIonexRescaling, firstOrderDelayCoefficient, quadratureOrder,
-        ccirDataPath, solarActivityDataPath, ionexRmsBiasTecu );
+        ccirDataPath, solarActivityDataPath, ionexRmsBiasTecu,
+        topsideAwareRescaling, rescalingFloor );
 }
 
 inline std::shared_ptr< LightTimeCorrectionSettings > vmf3TroposphericCorrectionSettings(
